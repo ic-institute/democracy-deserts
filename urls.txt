@@ -1,0 +1,13 @@
+cacities/charter-cities.pdf:
+
+List of 121 charter cities in California
+
+https://www.cacities.org/UploadedFiles/LeagueInternet/6b/6bbb4ee3-88f9-4d8f-93ad-0075a7b486c4.pdf
+
+
+census/CVAP_2015-2019*
+
+Citizen Voting-Age population in California by Race and Ethnicity
+
+https://www.census.gov/programs-surveys/decennial-census/about/voting-rights/cvap.2019.html
+

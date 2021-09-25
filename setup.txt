@@ -1,0 +1,14 @@
+# to install
+conda create --name democracy-deserts python=3.9
+conda activate democracy-deserts
+
+conda install -c conda-forge jupyterlab
+
+pip install --upgrade bamboolib --user
+python -m bamboolib install_nbextensions
+python -m bamboolib install_labextensions
+
+# to run
+conda activate democracy-deserts
+cd notebooks
+jupyter notebook

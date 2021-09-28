@@ -1,0 +1,5 @@
+- cities: % and number of people disenfranchised, esp. charter city
+- cities: % racial underrepresentation
+- Richmond: can vote vs. can't pie charts
+- California: can vote vs. can't pie charts
+- Charter city residents

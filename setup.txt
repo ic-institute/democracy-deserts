@@ -8,6 +8,8 @@ pip install --upgrade bamboolib --user
 python -m bamboolib install_nbextensions
 python -m bamboolib install_labextensions
 
+install-pyppeteer
+
 # to run
 conda activate democracy-deserts
 cd notebooks

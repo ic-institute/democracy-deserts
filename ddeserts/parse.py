@@ -12,9 +12,11 @@ def parse_cvap_row(row):
 def parse_geoname(geoname):
     r = dict(state='', name='', geotype='')
 
-    # e.g. state data
+    # state data
     if ', ' not in geoname:
         r['state'] = geoname
+        r['name'] = r['state']
+        r['geotype'] = 'state'
         return r
     
     rest, r['state'] = geoname.rsplit(', ', 1)

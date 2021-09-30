@@ -1,10 +1,40 @@
 """Load and parse CSV data"""
 from csv import DictReader
-from csv import QUOTE_NONNUMERIC
+
+from pandas import DataFrame
 
 from os.path import basename
+from os.path import join
 
 from .parse import parse_cvap_row
+from .stats import moe_of_ratio
+from .stats import moe_of_sum
+
+
+CVAP_DATA_DIR = 'data/census/CVAP_2015-2019_ACS_csv_files'
+CHARTER_CITIES_FILE = 'data/cacities/charter-cities.txt'
+
+
+def load_charter_cities():
+    with open(CHARTER_CITIES_FILE) as f:
+        return { line.strip() for line in f }
+
+
+def load_cvap_data(name, *, pre_filter=None, filter=None):
+    path = join(CVAP_DATA_DIR, name + '.csv')
+
+    rows = list(read_cvap_csv(path, pre_filter=pre_filter, filter=filter))
+
+    df = DataFrame.from_records(rows, index=['table', 'line'])
+
+    # fix data types
+    df['tot_moe'] = df['tot_moe'].astype('int')
+    df['adu_moe'] = df['adu_moe'].astype('int')
+    df['cvap_moe'] = df['cvap_moe'].astype('int')
+    df['cit_moe'] = df['cit_moe'].astype('int')
+
+    return df
+
 
 def read_cvap_csv(path, *, pre_filter=None, filter=None):
     # e.g. 'Place'

@@ -7,8 +7,6 @@ from os.path import basename
 from os.path import join
 
 from .parse import parse_cvap_row
-from .stats import moe_of_ratio
-from .stats import moe_of_sum
 
 
 CVAP_DATA_DIR = 'data/census/CVAP_2015-2019_ACS_csv_files'

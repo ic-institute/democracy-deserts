@@ -1,6 +1,6 @@
 from math import ceil
 
-from .stats import moe_of_ratio
+from .stats import moe_of_subpop_ratio
 from .stats import moe_of_sum
 
 
@@ -13,12 +13,12 @@ def add_dvap_columns(df):
         axis=1
     ).astype('int')
 
-    df['dvap_pct'] = df['dvap_est'] / df['adu_est']
-    df['dvap_pct_moe'] = df.apply(
-        lambda r: moe_of_ratio(
+    df['dpct_est'] = df['dvap_est'] / df['adu_est']
+    df['dpct_moe'] = df.apply(
+        lambda r: moe_of_subpop_ratio(
             r['dvap_est'], r['dvap_moe'], r['adu_est'], r['adu_moe']
         ),
-        axis=1
+        axis=1,
     ).astype('float')
 
     return df

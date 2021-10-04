@@ -7,21 +7,29 @@ def moe_of_sum(*moes):
     return sqrt(sum(moe ** 2 for moe in moes))
 
 
-def moe_of_ratio(a_est, a_moe, b_est, b_moe):
-    """Approximate margin of error for a/b."""
-    # this only makes sense for positive divisors
-    if not (b_est > b_moe >= 0):
-        raise ValueError
+def moe_of_subpop_ratio(subpop_est, subpop_moe, pop_est, pop_moe):
+    """Approximate margin of error for the ratio of a subpopulation size
+    to the population size, assuming these estimates were made from
+    different sources (as happens in ACS data).
 
-    # find highest and lowest values within margin of error
-    min_a = a_est - a_moe
-    max_a = a_est + a_moe
-    min_b = b_est - b_moe
-    max_b = b_est + b_moe
+    We assume:
+    - size of the population is at least 1
+    - size of the subpopulation between 0 and the size of the population
+    """
+    assert subpop_est >= 0
+    assert subpop_moe >= 0
+    assert pop_est >= 0
+    assert pop_moe >= 0
+
+    def _ratio(subpop, pop):
+        pop = max(pop, 1)
+        subpop = max(min(subpop, pop), 0)
+
+        return subpop / pop
+
+    ratio_est = _ratio(subpop_est, pop_est)
+    ratio_min = _ratio(subpop_est - subpop_moe, pop_est + pop_moe)
+    ratio_max = _ratio(subpop_est + subpop_moe, pop_est - pop_moe)
     
-    # compare highest and lowest ratios to our estimate
-    ratio = a_est / b_est
-    min_ratio = min_a / max_b
-    max_ratio = max_a / min_b
-    
-    return max(ratio - min_ratio, max_ratio - ratio)
+    return max(ratio_est - ratio_min, ratio_max - ratio_est)
+

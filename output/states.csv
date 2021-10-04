@@ -1,4 +1,4 @@
-table,line,geoname,lntitle,geoid,lnnumber,tot_est,tot_moe,adu_est,adu_moe,cit_est,cit_moe,cvap_est,cvap_moe,state,name,geotype,dvap_est,dvap_moe,dvap_pct,dvap_pct_moe
+table,line,geoname,lntitle,geoid,lnnumber,tot_est,tot_moe,adu_est,adu_moe,cit_est,cit_moe,cvap_est,cvap_moe,state,name,geotype,dvap_est,dvap_moe,dpct_est,dpct_moe
 State,1,Alabama,Total,04000US01,1,4876250,0,3779875,543,4770940,3095,3685075,3025,Alabama,Alabama,state,94800,3074,0.0250801944508747,0.0008169746784846693
 State,14,Alaska,Total,04000US02,1,737070,0,552675,202,712455,1445,530995,1196,Alaska,Alaska,state,21680,1213,0.03922739403808748,0.002209925070719647
 State,27,Arizona,Total,04000US04,1,7050300,0,5414955,227,6519390,7470,4920450,6675,Arizona,Arizona,state,494505,6679,0.09132208854921232,0.00123731609678282

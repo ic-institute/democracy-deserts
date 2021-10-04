@@ -1,4 +1,4 @@
-table,line,geoname,lntitle,geoid,lnnumber,tot_est,tot_moe,adu_est,adu_moe,cit_est,cit_moe,cvap_est,cvap_moe,state,name,geotype,dvap_est,dvap_moe,dvap_pct,dvap_pct_moe,has_charter
+table,line,geoname,lntitle,geoid,lnnumber,tot_est,tot_moe,adu_est,adu_moe,cit_est,cit_moe,cvap_est,cvap_moe,state,name,geotype,dvap_est,dvap_moe,dpct_est,dpct_moe,has_charter
 Place,25130,"Adelanto city, California",Total,16000US0600296,1,33660,33,21995,653,29610,532,18090,794,California,Adelanto,city,3905,1029,0.17754035007956354,0.05364698006756419,True
 Place,25156,"Agoura Hills city, California",Total,16000US0600394,1,20535,54,16140,393,19320,468,15050,497,California,Agoura Hills,city,1090,634,0.06753407682775713,0.041947094188944475,False
 Place,25221,"Alameda city, California",Total,16000US0600562,1,78520,53,62565,524,72155,810,56575,831,California,Alameda,city,5990,983,0.09574042995284904,0.016652987303481456,True
@@ -6,7 +6,7 @@ Place,25247,"Albany city, California",Total,16000US0600674,1,19805,30,14665,241,
 Place,25286,"Alhambra city, California",Total,16000US0600884,1,84645,120,70315,496,69830,975,56645,928,California,Alhambra,city,13670,1053,0.19441086539145275,0.01646296551417467,True
 Place,25312,"Aliso Viejo city, California",Total,16000US0600947,1,50665,77,38200,411,46630,536,34570,588,California,Aliso Viejo,city,3630,718,0.09502617801047121,0.020033760066747022,False
 Place,25481,"Alturas city, California",Total,16000US0601444,1,2565,25,2015,104,2465,112,1915,144,California,Alturas,city,100,178,0.04962779156327544,0.09584578248172718,False
-Place,25507,"Amador City city, California",Total,16000US0601514,1,165,80,130,56,165,79,125,57,California,Amador City,city,5,80,0.038461538461538464,1.1101871101871101,False
+Place,25507,"Amador City city, California",Total,16000US0601514,1,165,80,130,56,165,79,125,57,California,Amador City,city,5,80,0.038461538461538464,0.9615384615384616,False
 Place,25520,"American Canyon city, California",Total,16000US0601640,1,20260,37,15065,271,17835,321,12770,390,California,American Canyon,city,2295,475,0.1523398606040491,0.034898208883581,False
 Place,25546,"Anaheim city, California",Total,16000US0602000,1,349965,90,265820,1596,279720,2642,199685,3028,California,Anaheim,city,66135,3423,0.2487961778647205,0.014457727912196044,True
 Place,25572,"Anderson city, California",Total,16000US0602042,1,10405,119,7705,257,10280,164,7575,269,California,Anderson,city,130,373,0.016872160934458143,0.05066274776586409,False
@@ -447,7 +447,7 @@ Place,43317,"Union City city, California",Total,16000US0681204,1,74720,84,60635,
 Place,43356,"Upland city, California",Total,16000US0681344,1,76595,89,59830,606,70720,824,54385,997,California,Upland,city,5445,1167,0.09100785559084072,0.02063607254640093,False
 Place,43382,"Vacaville city, California",Total,16000US0681554,1,98875,64,76445,665,93595,724,71520,940,California,Vacaville,city,4925,1152,0.06442540388514618,0.01576725908661418,False
 Place,43421,"Vallejo city, California",Total,16000US0681666,1,121265,66,96175,737,109550,1015,85175,1170,California,Vallejo,city,11000,1383,0.11437483753574214,0.0153743189847214,True
-Place,43590,"Vernon city, California",Total,16000US0682422,1,130,54,80,37,115,50,65,35,California,Vernon,city,15,51,0.1875,1.3473837209302326,True
+Place,43590,"Vernon city, California",Total,16000US0682422,1,130,54,80,37,115,50,65,35,California,Vernon,city,15,51,0.1875,0.8125,True
 Place,43616,"Victorville city, California",Total,16000US0682590,1,121900,63,83255,1275,111290,1128,73325,1661,California,Victorville,city,9930,2094,0.11927211578884152,0.027397803703717652,True
 Place,43642,"Villa Park city, California",Total,16000US0682744,1,5860,25,4785,110,5690,97,4610,136,California,Villa Park,city,175,175,0.03657262277951933,0.03829368738090847,False
 Place,43707,"Visalia city, California",Total,16000US0682954,1,132105,59,93190,1089,122730,1145,84355,1466,California,Visalia,city,8835,1827,0.0948063096898809,0.020957905682373476,True

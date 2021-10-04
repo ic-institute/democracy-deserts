@@ -20,5 +20,5 @@ __pycache__/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# output directory
-/output
+# output
+/output/tmp

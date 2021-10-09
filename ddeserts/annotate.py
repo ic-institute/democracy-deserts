@@ -13,6 +13,13 @@ RACES = sorted(
 )
 
 
+def add_all_stat_columns(df):
+    """Add all annotations other than geographic columns
+    (see add_geo_columns(), add_charter_column())."""
+    add_race_other_columns(df)
+    add_dvap_columns(df)
+
+
 def add_dvap_columns(df):
     """Add the *dvap_est* and *dvap_moe* columns
 
@@ -38,16 +45,16 @@ def add_geo_columns(df):
         df[col] = geo_df[col]
 
 
-def add_has_charter_column(df, charter_cities):
+def add_charter_column(df, charter_cities):
     """Add the *charter_cities* column, based on *name* and *geotype*;
     these fields are added by add_geo_columns()
     """
-    df['has_charter'] = (
+    df['charter'] = (
         df['name'].isin(charter_cities) & df['geotype'] == 'city'
     )
 
 
-def add_other_race_columns(df):
+def add_race_other_columns(df):
     """Add columns for number of people who aren't covered by the basic
     racial data (under the original data's categories, these are
     non-Hispanic people of two or more races).

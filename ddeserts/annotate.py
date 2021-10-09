@@ -68,12 +68,21 @@ def add_ratio_columns(df, subpop, pop, name=None):
         # e.g. his_adu_est, adu_est -> adu_his
         name = pop.split('_')[0] + '_' + subpop.split('_')[0]
 
-    df[f'p_{name}_est'] = df.apply(
+    df[f'p_{name}_est'] = div_est_cols(df, subpop, pop)
+    df[f'p_{name}_moe'] = div_moe_cols(df, subpop, pop)
+
+
+def div_est_cols(df, subpop, pop):
+    """Like subpop_ratio(), but operating on columns."""
+    return df.apply(
         lambda r: subpop_ratio(r[f'{subpop}_est'], r[f'{pop}_est']),
         axis=1,
     ).astype('float')
 
-    df[f'p_{name}_moe'] = df.apply(
+
+def div_moe_cols(df, subpop, pop):
+    """Like moe_of_subpop_ratio(), but operating on columns"""
+    return df.apply(
         lambda r: moe_of_subpop_ratio(
             r[f'{subpop}_est'], r[f'{subpop}_moe'], 
             r[f'{pop}_est'], r[f'{pop}_moe'], 
@@ -81,11 +90,15 @@ def add_ratio_columns(df, subpop, pop, name=None):
         axis=1,
     ).astype('float')
 
+# there is no sum_est_cols(); just use +, -, and sum()
 
 def sum_moe_cols(df, *pops, to_int=True):
-    """Like moe_of_sum, but for columns.
+    """Like moe_of_sum(), but operating on columns.
 
     *pops* are the column names, without the "_moe" suffix
+    (e.g 'adu', 'cvap').
+
+    returns a Series, to use as a new column
     """
     def moe_of_row(r):
         return moe_of_sum(*(r[f'{p}_moe'] for p in pops))

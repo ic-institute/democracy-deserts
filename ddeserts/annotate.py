@@ -2,10 +2,15 @@ from math import ceil
 
 from pandas import Series
 
+from .load import LN_PREFIXES
 from .parse import parse_geoname
 from .stats import moe_of_subpop_ratio
 from .stats import moe_of_sum
 from .stats import subpop_ratio
+
+RACES = sorted(
+    v[:-1] for v in LN_PREFIXES.values() if v
+)
 
 
 def add_dvap_columns(df):
@@ -46,6 +51,25 @@ def add_has_charter_column(df, charter_cities):
         df['name'].isin(charter_cities) & df['geotype'] == 'city'
     )
 
+
+def add_other_race_columns(df):
+    """Add columns for number of people who aren't covered by the basic
+    racial data (under the original data's categories, these are
+    non-Hispanic people of two or more races).
+    """
+    for pop in ('adu', 'cit', 'cvap', 'tot'):
+        df[f'oth_{pop}_est'] = (
+            df[f'{pop}_est'] -
+            sum(df[f'{race}_{pop}_est'] for race in RACES)
+        )
+
+        df[f'oth_{pop}_moe'] = df.apply(
+            lambda r: ceil(moe_of_sum(
+                r[f'{pop}_moe'],
+                *(r[f'{race}_{pop}_moe'] for race in RACES)
+            )),
+            axis=1,
+        )
 
 def add_ratio_columns(df, subpop, pop, name=None):
     if name is None:

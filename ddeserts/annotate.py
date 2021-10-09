@@ -21,12 +21,7 @@ def add_dvap_columns(df):
     (adu_est) minus CVAP (cvap_est).
     """
     df['dvap_est'] = df['adu_est'] - df['cvap_est']
-    df['dvap_moe'] = df.apply(
-        lambda r: (
-            ceil(moe_of_sum(r['adu_moe'], r['cvap_moe']))
-        ),
-        axis=1
-    ).astype('int')
+    df['dvap_moe'] = sum_moe_cols(df, 'adu', 'cvap')
 
     # add p_adu_dvap_{est,moe}
     add_ratio_columns(df, 'dvap', 'adu')
@@ -63,13 +58,10 @@ def add_other_race_columns(df):
             sum(df[f'{race}_{pop}_est'] for race in RACES)
         )
 
-        df[f'oth_{pop}_moe'] = df.apply(
-            lambda r: ceil(moe_of_sum(
-                r[f'{pop}_moe'],
-                *(r[f'{race}_{pop}_moe'] for race in RACES)
-            )),
-            axis=1,
+        df[f'oth_{pop}_moe'] = sum_moe_cols(
+            df, f'{pop}', *(f'{race}_{pop}' for race in RACES)
         )
+
 
 def add_ratio_columns(df, subpop, pop, name=None):
     if name is None:
@@ -88,6 +80,22 @@ def add_ratio_columns(df, subpop, pop, name=None):
         ),
         axis=1,
     ).astype('float')
+
+
+def sum_moe_cols(df, *pops, to_int=True):
+    """Like moe_of_sum, but for columns.
+
+    *pops* are the column names, without the "_moe" suffix
+    """
+    def moe_of_row(r):
+        return moe_of_sum(*(r[f'{p}_moe'] for p in pops))
+
+    result = df.apply(moe_of_row, axis=1)
+
+    if to_int:
+        result = result.apply(ceil).astype('int')
+
+    return result
 
 
 def with_columns_sorted(df):

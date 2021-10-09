@@ -12,6 +12,11 @@ RACES = sorted(
     v[:-1] for v in LN_PREFIXES.values() if v
 )
 
+PREFIXES = sorted(
+    ['', 'oth_'] +
+    [f'{r}_' for r in RACES]
+)
+
 
 def add_geo_columns(df):
     """Add the *name*, *state*, and *geotype* columns by parsing
@@ -36,7 +41,6 @@ def with_columns_sorted(df):
     return df.reindex(sorted(df.columns, key=sort_key), axis=1)
 
 
-
 def add_dvap_columns(df):
     """Add the *dvap_est* and *dvap_moe* columns
 
@@ -47,8 +51,9 @@ def add_dvap_columns(df):
     df['dvap_est'] = df['adu_est'] - df['cvap_est']
     df['dvap_moe'] = sum_moe_cols(df, 'adu', 'cvap')
 
-    # add p_adu_dvap_{est,moe}
-    add_ratio_columns(df, 'dvap', 'adu')
+    df['p_adu_dvap_est'] = div_est_cols(df, 'dvap', 'adu')
+    # we know p_adu_cvap + p_adu_dvap = 1, so use CVAP moe because it's smaller
+    df['p_adu_dvap_moe'] = div_moe_cols(df, 'cvap', 'adu')
 
     return df
 

@@ -13,11 +13,28 @@ RACES = sorted(
 )
 
 
+def add_geo_columns(df):
+    """Add the *name*, *state*, and *geotype* columns by parsing
+    the *geoname* column"""
+    geo_df = df['geoname'].apply(lambda g: Series(parse_geoname(g)))
+
+    for col in ('name', 'state', 'geotype'):
+        df[col] = geo_df[col]
+
+
 def add_all_stat_columns(df):
     """Add all annotations other than geographic columns
-    (see add_geo_columns(), add_charter_column())."""
+    (see add_geo_columns())"""
     add_race_other_columns(df)
     add_dvap_columns(df)
+
+
+def with_columns_sorted(df):
+    def sort_key(col_name):
+        return (len(col_name.split('_')), col_name)
+
+    return df.reindex(sorted(df.columns, key=sort_key), axis=1)
+
 
 
 def add_dvap_columns(df):
@@ -35,23 +52,6 @@ def add_dvap_columns(df):
 
     return df
 
-
-def add_geo_columns(df):
-    """Add the *name*, *state*, and *geotype* columns by parsing
-    the *geoname* column"""
-    geo_df = df['geoname'].apply(lambda g: Series(parse_geoname(g)))
-
-    for col in ('name', 'state', 'geotype'):
-        df[col] = geo_df[col]
-
-
-def add_charter_column(df, charter_cities):
-    """Add the *charter_cities* column, based on *name* and *geotype*;
-    these fields are added by add_geo_columns()
-    """
-    df['charter'] = (
-        df['name'].isin(charter_cities) & df['geotype'] == 'city'
-    )
 
 
 def add_race_other_columns(df):
@@ -117,9 +117,3 @@ def sum_moe_cols(df, *pops, to_int=True):
 
     return result
 
-
-def with_columns_sorted(df):
-    def sort_key(col_name):
-        return (len(col_name.split('_')), col_name)
-
-    return df.reindex(sorted(df.columns, key=sort_key), axis=1)

@@ -32,10 +32,10 @@ def load_charter_cities():
         return { line.strip() for line in f }
 
 
-def load_cvap_data(name, *, pre_filter=None, filter=None):
+def load_cvap_data(name, *, pre_filter=None):
     path = join(CVAP_DATA_DIR, name + '.csv')
 
-    rows = read_cvap_csv(path, pre_filter=pre_filter, filter=filter)
+    rows = read_cvap_csv(path, pre_filter=pre_filter)
 
     records = rows_to_records(rows)
 
@@ -77,7 +77,7 @@ def rows_to_records(csv_rows):
         yield result
 
 
-def read_cvap_csv(path, *, pre_filter=None, filter=None):
+def read_cvap_csv(path, *, pre_filter=None):
     # e.g. 'Place'
     table = basename(path).rsplit('.', 1)[0]
 
@@ -102,5 +102,4 @@ def read_cvap_csv(path, *, pre_filter=None, filter=None):
             row['line'] = line_num
             row['table'] = table
 
-            if not filter or filter(parsed_row):
-                yield parsed_row
+            yield parsed_row

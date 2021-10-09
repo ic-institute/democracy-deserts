@@ -1,2 +1,7 @@
-- process csv into columns by race
+- use _p, _pmoe for %/ratio columns
++ process csv into columns by race
+- add mix_ columns
+- add 
+
+
 - cities: % racial underrepresentation

@@ -21,15 +21,15 @@ def moe_of_subpop_ratio(subpop_est, subpop_moe, pop_est, pop_moe):
     assert pop_est >= 0
     assert pop_moe >= 0
 
-    def _ratio(subpop, pop):
-        pop = max(pop, 1)
-        subpop = max(min(subpop, pop), 0)
-
-        return subpop / pop
-
-    ratio_est = _ratio(subpop_est, pop_est)
-    ratio_min = _ratio(subpop_est - subpop_moe, pop_est + pop_moe)
-    ratio_max = _ratio(subpop_est + subpop_moe, pop_est - pop_moe)
+    ratio_est = subpop_ratio(subpop_est, pop_est)
+    ratio_min = subpop_ratio(subpop_est - subpop_moe, pop_est + pop_moe)
+    ratio_max = subpop_ratio(subpop_est + subpop_moe, pop_est - pop_moe)
     
     return max(ratio_est - ratio_min, ratio_max - ratio_est)
 
+
+def subpop_ratio(subpop_est, pop_est):
+    pop_est = max(pop_est, 1)
+    subpop_est = max(min(subpop_est, pop_est), 0)
+
+    return subpop_est / pop_est

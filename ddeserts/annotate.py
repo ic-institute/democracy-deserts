@@ -46,8 +46,6 @@ def add_has_charter_column(df, charter_cities):
         df['name'].isin(charter_cities) & df['geotype'] == 'city'
     )
 
-    return df
-
 
 def add_ratio_columns(df, subpop, pop, name=None):
     if name is None:
@@ -66,3 +64,10 @@ def add_ratio_columns(df, subpop, pop, name=None):
         ),
         axis=1,
     ).astype('float')
+
+
+def with_columns_sorted(df):
+    def sort_key(col_name):
+        return (len(col_name.split('_')), col_name)
+
+    return df.reindex(sorted(df.columns, key=sort_key), axis=1)

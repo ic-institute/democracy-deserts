@@ -8,13 +8,12 @@ from .stats import moe_of_subpop_ratio
 from .stats import moe_of_sum
 from .stats import subpop_ratio
 
+
+# population labels in the original data
+POPS = ('adu', 'cit', 'cvap', 'tot')
+
 RACES = sorted(
     v[:-1] for v in LN_PREFIXES.values() if v
-)
-
-PREFIXES = sorted(
-    ['', 'oth_'] +
-    [f'{r}_' for r in RACES]
 )
 
 
@@ -31,6 +30,7 @@ def add_all_stat_columns(df):
     """Add all annotations other than geographic columns
     (see add_geo_columns())"""
     add_race_other_columns(df)
+    add_race_ratio_columns(df)
     add_dvap_columns(df)
 
 
@@ -40,6 +40,9 @@ def with_columns_sorted(df):
 
     return df.reindex(sorted(df.columns, key=sort_key), axis=1)
 
+
+# stat columns. probably best not to call these individually, as they're
+# sometimes order-dependent
 
 def add_dvap_columns(df):
     """Add the *dvap_est* and *dvap_moe* columns
@@ -58,7 +61,6 @@ def add_dvap_columns(df):
     return df
 
 
-
 def add_race_other_columns(df):
     """Add columns for number of people who aren't covered by the basic
     racial data (under the original data's categories, these are
@@ -75,14 +77,35 @@ def add_race_other_columns(df):
         )
 
 
-def add_ratio_columns(df, subpop, pop, name=None):
-    if name is None:
-        # e.g. his_adu_est, adu_est -> adu_his
-        name = pop.split('_')[0] + '_' + subpop.split('_')[0]
+def add_race_ratio_columns(df):
+    """Add columns like "p_adu_his_est" 
+    (estimate of % of adults that are hispanic) for each
+    race (including "other") and population type
+    """
+    for pop in POPS:
+        for race in RACES:
+            df[f'p_{pop}_{race}_est'] = div_est_cols(
+                df, f'{race}_{pop}', f'{pop}'
+            )
 
-    df[f'p_{name}_est'] = div_est_cols(df, subpop, pop)
-    df[f'p_{name}_moe'] = div_moe_cols(df, subpop, pop)
+            df[f'p_{pop}_{race}_moe'] = div_moe_cols(
+                df, f'{race}_{pop}', f'{pop}'
+            )
 
+        # other % is just one 1 minus % of each race
+        df[f'p_{pop}_oth_est'] = 1 - sum(
+            df[f'p_{pop}_{race}_est'] for race in RACES
+        )
+
+        # so other MoE is just the combined MoE of % of each race
+        df[f'p_{pop}_oth_moe'] = sum_moe_cols(
+            df,
+            *(f'p_{pop}_{race}' for race in RACES),
+            to_int=False,
+        )
+
+
+# utilities for combining columns
 
 def div_est_cols(df, subpop, pop):
     """Like subpop_ratio(), but operating on columns."""

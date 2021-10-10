@@ -17,6 +17,8 @@ RACES = tuple(sorted(
     v[:-1] for v in LN_PREFIXES.values() if v
 ))
 
+RACES_WITH_OTH = RACES + ('oth',)
+
 
 def add_geo_columns(df):
     """Add the *name*, *state*, and *geotype* columns by parsing
@@ -31,9 +33,11 @@ def add_all_stat_columns(df):
     """Add all annotations other than geographic columns
     (see add_geo_columns())"""
     add_race_other_columns(df)
-    add_dvap_columns(df, races=RACES + ('oth',))
-    add_dis_ratio_columns(df, races=RACES + ('oth',))
+    add_dvap_columns(df, races=RACES_WITH_OTH)
+    add_dis_ratio_columns(df, races=RACES_WITH_OTH)
     add_race_ratio_columns(df, pops=POPS + ('dvap',))
+    add_underrep_race_cols(df, races=RACES_WITH_OTH)
+    add_underrep_score_cols(df)  # don't include oth_
 
 
 def with_columns_sorted(df):
@@ -121,6 +125,39 @@ def add_race_ratio_columns(df, pops=POPS):
             df,
             *(f'p_{pop}_{race}' for race in RACES)
         )
+
+def add_underrep_race_cols(df, races=RACES):
+    for r in races:
+        df[f'underrep_{r}_est'] = (
+            df[f'p_adu_{r}_est'] - df[f'p_cvap_{r}_est']
+        )
+
+        df[f'underrep_{r}_moe'] = sum_moe_cols(
+            df, f'p_adu_{r}', f'p_cvap_{r}'
+        )
+
+
+def add_underrep_score_cols(df, races=RACES):
+    def make_score_cols(row):
+        ests = []
+        moes = []
+
+        for race in races:
+            est = row[f'underrep_{race}_est']
+            moe = row[f'underrep_{race}_moe']
+
+            if est > 0:
+                ests.append(est)
+                moes.append(moe)
+            elif est + moe > 0:
+                # race is estimated to be over-represented, but might 
+                # actually be under-represented by a bit because of MoE
+                moes.append(est + moe)
+
+        return Series([sum(ests) * 100, moe_of_sum(*moes) * 100])
+
+    score_df = df.apply(make_score_cols, axis=1)
+    df[['underrep_score_est', 'underrep_score_moe']] = score_df
 
 
 # utilities for combining columns

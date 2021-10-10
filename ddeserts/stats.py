@@ -17,9 +17,7 @@ def moe_of_subpop_ratio(subpop_est, subpop_moe, pop_est, pop_moe):
     - size of the population is at least 1
     - size of the subpopulation between 0 and the size of the population
     """
-    assert subpop_est >= 0
     assert subpop_moe >= 0
-    assert pop_est >= 0
     assert pop_moe >= 0
 
     ratio_est = subpop_ratio(subpop_est, pop_est)

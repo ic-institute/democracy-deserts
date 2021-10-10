@@ -12,9 +12,9 @@ from .stats import subpop_ratio
 # population labels in the original data
 POPS = ('adu', 'cit', 'cvap', 'tot')
 
-RACES = sorted(
+RACES = tuple(sorted(
     v[:-1] for v in LN_PREFIXES.values() if v
-)
+))
 
 
 def add_geo_columns(df):
@@ -30,8 +30,9 @@ def add_all_stat_columns(df):
     """Add all annotations other than geographic columns
     (see add_geo_columns())"""
     add_race_other_columns(df)
-    add_race_ratio_columns(df)
-    add_dvap_columns(df)
+    add_dvap_columns(df, races=RACES + ('oth',))
+    add_dis_ratio_columns(df, races=RACES + ('oth',))
+    add_race_ratio_columns(df, pops=POPS + ('dvap',))
 
 
 def with_columns_sorted(df):
@@ -44,29 +45,44 @@ def with_columns_sorted(df):
 # stat columns. probably best not to call these individually, as they're
 # sometimes order-dependent
 
-def add_dvap_columns(df):
+def add_dvap_columns(df, races=()):
     """Add the *dvap_est* and *dvap_moe* columns
 
     DVAP stands for "disenfranchised voting-age population", in contrast
     to CVAP ("citizen voting-age population"), and is just number of adults
     (adu_est) minus CVAP (cvap_est).
     """
-    df['dvap_est'] = df['adu_est'] - df['cvap_est']
-    df['dvap_moe'] = sum_moe_cols(df, 'adu', 'cvap')
+    df[f'dvap_est'] = df[f'adu_est'] - df[f'cvap_est']
+    df[f'dvap_moe'] = sum_moe_cols(df, f'adu', f'cvap')
 
-    df['p_adu_dvap_est'] = div_est_cols(df, 'dvap', 'adu')
-    # we know p_adu_cvap + p_adu_dvap = 1, so use CVAP moe because it's smaller
-    df['p_adu_dvap_moe'] = div_moe_cols(df, 'cvap', 'adu')
+    for r in races:
+        df[f'{r}_dvap_est'] = df[f'{r}_adu_est'] - df[f'{r}_cvap_est']
+        df[f'{r}_dvap_moe'] = sum_moe_cols(df, f'{r}_adu', f'{r}_cvap')
+
+
+def add_dis_ratio_columns(df, races=()):
+    """Add columns for % of adults disenfranchised due to citizenship
+    requirements."""
+
+    # use "any" rather than "p_dis_est" to keep all p_ columns sorted together
+    df['p_any_dis_est'] = div_est_cols(df, 'dvap', 'adu')
+    # we know p_adu_cvap + p_adu_dvap = 1, so use CVAP MoE because it's smaller
+    df['p_any_dis_moe'] = div_moe_cols(df, 'cvap', 'adu')
+
+    # same, but by race
+    for r in races:
+        df[f'p_{r}_dis_est'] = div_est_cols(df, f'{r}_dvap', f'{r}_adu')
+        df[f'p_{r}_dis_moe'] = div_moe_cols(df, f'{r}_cvap', f'{r}_adu')
 
     return df
 
 
-def add_race_other_columns(df):
+def add_race_other_columns(df, pops=POPS):
     """Add columns for number of people who aren't covered by the basic
     racial data (under the original data's categories, these are
     non-Hispanic people of two or more races).
     """
-    for pop in ('adu', 'cit', 'cvap', 'tot'):
+    for pop in pops:
         df[f'oth_{pop}_est'] = (
             df[f'{pop}_est'] -
             sum(df[f'{race}_{pop}_est'] for race in RACES)
@@ -77,12 +93,12 @@ def add_race_other_columns(df):
         )
 
 
-def add_race_ratio_columns(df):
+def add_race_ratio_columns(df, pops=POPS):
     """Add columns like "p_adu_his_est" 
     (estimate of % of adults that are hispanic) for each
     race (including "other") and population type
     """
-    for pop in POPS:
+    for pop in pops:
         for race in RACES:
             df[f'p_{pop}_{race}_est'] = div_est_cols(
                 df, f'{race}_{pop}', f'{pop}'
@@ -124,6 +140,7 @@ def div_moe_cols(df, subpop, pop):
         ),
         axis=1,
     ).astype('float')
+
 
 # there is no sum_est_cols(); just use +, -, and sum()
 

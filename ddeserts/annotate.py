@@ -1,6 +1,7 @@
 from math import ceil
 
 from pandas import Series
+from pandas.api.types import is_integer_dtype
 
 from .load import LN_PREFIXES
 from .parse import parse_geoname
@@ -118,8 +119,7 @@ def add_race_ratio_columns(df, pops=POPS):
         # so other MoE is just the combined MoE of % of each race
         df[f'p_{pop}_oth_moe'] = sum_moe_cols(
             df,
-            *(f'p_{pop}_{race}' for race in RACES),
-            to_int=False,
+            *(f'p_{pop}_{race}' for race in RACES)
         )
 
 
@@ -146,7 +146,7 @@ def div_moe_cols(df, subpop, pop):
 
 # there is no sum_est_cols(); just use +, -, and sum()
 
-def sum_moe_cols(df, *pops, to_int=True):
+def sum_moe_cols(df, *pops):
     """Like moe_of_sum(), but operating on columns.
 
     *pops* are the column names, without the "_moe" suffix
@@ -159,7 +159,7 @@ def sum_moe_cols(df, *pops, to_int=True):
 
     result = df.apply(moe_of_row, axis=1)
 
-    if to_int:
+    if all(is_integer_dtype(df[f'{p}_moe']) for p in pops):
         result = result.apply(ceil).astype('int')
 
     return result

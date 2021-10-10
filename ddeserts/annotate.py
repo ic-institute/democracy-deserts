@@ -52,11 +52,13 @@ def add_dvap_columns(df, races=()):
     to CVAP ("citizen voting-age population"), and is just number of adults
     (adu_est) minus CVAP (cvap_est).
     """
-    df[f'dvap_est'] = df[f'adu_est'] - df[f'cvap_est']
+    df[f'dvap_est'] = (df['adu_est'] - df['cvap_est']).clip(0)
     df[f'dvap_moe'] = sum_moe_cols(df, f'adu', f'cvap')
 
     for r in races:
-        df[f'{r}_dvap_est'] = df[f'{r}_adu_est'] - df[f'{r}_cvap_est']
+        df[f'{r}_dvap_est'] = (
+            df[f'{r}_adu_est'] - df[f'{r}_cvap_est']
+        ).clip(0)
         df[f'{r}_dvap_moe'] = sum_moe_cols(df, f'{r}_adu', f'{r}_cvap')
 
 
@@ -86,7 +88,7 @@ def add_race_other_columns(df, pops=POPS):
         df[f'oth_{pop}_est'] = (
             df[f'{pop}_est'] -
             sum(df[f'{race}_{pop}_est'] for race in RACES)
-        )
+        ).clip(0)
 
         df[f'oth_{pop}_moe'] = sum_moe_cols(
             df, f'{pop}', *(f'{race}_{pop}' for race in RACES)
@@ -109,9 +111,9 @@ def add_race_ratio_columns(df, pops=POPS):
             )
 
         # other % is just one 1 minus % of each race
-        df[f'p_{pop}_oth_est'] = 1 - sum(
+        df[f'p_{pop}_oth_est'] = (1 - sum(
             df[f'p_{pop}_{race}_est'] for race in RACES
-        )
+        )).clip(0, 1)
 
         # so other MoE is just the combined MoE of % of each race
         df[f'p_{pop}_oth_moe'] = sum_moe_cols(

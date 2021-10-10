@@ -1,8 +1,2 @@
-- use _p, _pmoe for %/ratio columns
-+ process csv into columns by race
-- add mix_ columns
-- add % of pop, adults, cvap for each race
-- diff in 
-
-
-- cities: % racial underrepresentation
+- rename underrep. to race_disp?
+- sum 2-or-more race data to make "oth_" column, rather than using subtraction

@@ -5,9 +5,9 @@ from pandas.api.types import is_integer_dtype
 
 from .load import LN_PREFIXES
 from .parse import parse_geoname
-from .stats import moe_of_subpop_ratio
+from .stats import est_of_prop
+from .stats import moe_of_prop
 from .stats import moe_of_sum
-from .stats import subpop_ratio
 
 
 # population labels in the original data
@@ -34,8 +34,8 @@ def add_all_stat_columns(df):
     (see add_geo_columns())"""
     add_race_other_columns(df)
     add_dvap_columns(df, races=RACES_WITH_OTH)
-    add_dis_ratio_columns(df, races=RACES_WITH_OTH)
-    add_race_ratio_columns(df, pops=POPS + ('dvap',))
+    add_dis_prop_columns(df, races=RACES_WITH_OTH)
+    add_race_prop_columns(df, pops=POPS + ('dvap',))
     add_racial_disp_cols(df, races=RACES_WITH_OTH)
     add_racial_disp_score_cols(df)  # don't include oth_
 
@@ -58,28 +58,27 @@ def add_dvap_columns(df, races=()):
     (adu_est) minus CVAP (cvap_est).
     """
     df[f'dvap_est'] = (df['adu_est'] - df['cvap_est']).clip(0)
-    df[f'dvap_moe'] = sum_moe_cols(df, f'adu', f'cvap')
+    df[f'dvap_moe'] = sum_moe_col(df, f'adu', f'cvap')
 
     for r in races:
         df[f'{r}_dvap_est'] = (
             df[f'{r}_adu_est'] - df[f'{r}_cvap_est']
         ).clip(0)
-        df[f'{r}_dvap_moe'] = sum_moe_cols(df, f'{r}_adu', f'{r}_cvap')
+        df[f'{r}_dvap_moe'] = sum_moe_col(df, f'{r}_adu', f'{r}_cvap')
 
 
-def add_dis_ratio_columns(df, races=()):
+def add_dis_prop_columns(df, races=()):
     """Add columns for % of adults disenfranchised due to citizenship
     requirements."""
 
-    # use "any" rather than "p_dis_est" to keep all p_ columns sorted together
-    df['p_any_dis_est'] = div_est_cols(df, 'dvap', 'adu')
+    df['prop_adu_dvap_est'] = prop_ests(df, 'dvap', 'adu')
     # we know p_adu_cvap + p_adu_dvap = 1, so use CVAP MoE because it's smaller
-    df['p_any_dis_moe'] = div_moe_cols(df, 'cvap', 'adu')
+    df['prop_adu_dvap_moe'] = prop_moes(df, 'cvap', 'adu')
 
     # same, but by race
     for r in races:
-        df[f'p_{r}_dis_est'] = div_est_cols(df, f'{r}_dvap', f'{r}_adu')
-        df[f'p_{r}_dis_moe'] = div_moe_cols(df, f'{r}_cvap', f'{r}_adu')
+        df[f'prop_{r}_adu_dvap_est'] = prop_ests(df, f'{r}_dvap', f'{r}_adu')
+        df[f'prop_{r}_adu_dvap_moe'] = prop_moes(df, f'{r}_cvap', f'{r}_adu')
 
     return df
 
@@ -95,45 +94,45 @@ def add_race_other_columns(df, pops=POPS):
             sum(df[f'{race}_{pop}_est'] for race in RACES)
         ).clip(0)
 
-        df[f'oth_{pop}_moe'] = sum_moe_cols(
+        df[f'oth_{pop}_moe'] = sum_moe_col(
             df, f'{pop}', *(f'{race}_{pop}' for race in RACES)
         )
 
 
-def add_race_ratio_columns(df, pops=POPS):
-    """Add columns like "p_adu_his_est" 
+def add_race_prop_columns(df, pops=POPS):
+    """Add columns like "prop_adu_his_est" 
     (estimate of % of adults that are hispanic) for each
     race (including "other") and population type
     """
     for pop in pops:
         for race in RACES:
-            df[f'p_{pop}_{race}_est'] = div_est_cols(
+            df[f'prop_{pop}_{race}_est'] = prop_ests(
                 df, f'{race}_{pop}', f'{pop}'
             )
 
-            df[f'p_{pop}_{race}_moe'] = div_moe_cols(
+            df[f'prop_{pop}_{race}_moe'] = prop_moes(
                 df, f'{race}_{pop}', f'{pop}'
             )
 
         # other % is just one 1 minus % of each race
-        df[f'p_{pop}_oth_est'] = (1 - sum(
-            df[f'p_{pop}_{race}_est'] for race in RACES
+        df[f'prop_{pop}_oth_est'] = (1 - sum(
+            df[f'prop_{pop}_{race}_est'] for race in RACES
         )).clip(0, 1)
 
         # so other MoE is just the combined MoE of % of each race
-        df[f'p_{pop}_oth_moe'] = sum_moe_cols(
+        df[f'prop_{pop}_oth_moe'] = sum_moe_col(
             df,
-            *(f'p_{pop}_{race}' for race in RACES)
+            *(f'prop_{pop}_{race}' for race in RACES)
         )
 
 def add_racial_disp_cols(df, races=RACES):
     for r in races:
         df[f'racial_disp_{r}_est'] = (
-            df[f'p_cvap_{r}_est'] - df[f'p_adu_{r}_est']
+            df[f'prop_cvap_{r}_est'] - df[f'prop_adu_{r}_est']
         )
 
-        df[f'racial_disp_{r}_moe'] = sum_moe_cols(
-            df, f'p_cvap_{r}', f'p_adu_{r}'
+        df[f'racial_disp_{r}_moe'] = sum_moe_col(
+            df, f'prop_cvap_{r}', f'prop_adu_{r}'
         )
 
 
@@ -163,20 +162,20 @@ def add_racial_disp_score_cols(df, races=RACES):
 
 # utilities for combining columns
 
-def div_est_cols(df, subpop, pop):
-    """Like subpop_ratio(), but operating on columns."""
+def prop_ests(df, subpop, pop):
+    """Like est_of_prop(), but operating on columns."""
     return df.apply(
-        lambda r: subpop_ratio(r[f'{subpop}_est'], r[f'{pop}_est']),
+        lambda r: est_of_prop(r[f'{subpop}_est'], r[f'{pop}_est']),
         axis=1,
     ).astype('float')
 
 
-def div_moe_cols(df, subpop, pop):
-    """Like moe_of_subpop_ratio(), but operating on columns"""
+def prop_moes(df, subpop, pop):
+    """Like moe_of_prop(), but operating on columns"""
     return df.apply(
-        lambda r: moe_of_subpop_ratio(
-            r[f'{subpop}_est'], r[f'{subpop}_moe'], 
-            r[f'{pop}_est'], r[f'{pop}_moe'], 
+        lambda r: moe_of_prop(
+            r[f'{subpop}_est'], r[f'{pop}_est'],
+            r[f'{subpop}_moe'], r[f'{pop}_moe'],
         ),
         axis=1,
     ).astype('float')
@@ -184,7 +183,7 @@ def div_moe_cols(df, subpop, pop):
 
 # there is no sum_est_cols(); just use +, -, and sum()
 
-def sum_moe_cols(df, *pops):
+def sum_moe_col(df, *pops):
     """Like moe_of_sum(), but operating on columns.
 
     *pops* are the column names, without the "_moe" suffix

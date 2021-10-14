@@ -47,6 +47,10 @@ def parse_geoname(geoname):
     # convert "County" -> "county", "CDP" -> "cdp"
     r['geotype'] = r['geotype'].lower()
 
+    # in California, "town" is just a fancy name for city
+    if r['geotype'] == 'town' and r['state'] == 'California':
+        r['geotype'] = 'city'
+
     # add County clarification back to name
     if clarification:
         if 'County' in clarification or 'Counties' in clarification:

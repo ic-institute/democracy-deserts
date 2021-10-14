@@ -13,11 +13,8 @@ from .stats import moe_of_sum
 # population labels in the original data
 POPS = ('adu', 'cit', 'cvap', 'tot')
 
-RACES = tuple(sorted(
-    v[:-1] for v in LN_PREFIXES.values() if v
-))
-
-RACES_WITH_OTH = RACES + ('oth',)
+# racial ethnic/groups we collect data for
+RACES = ('asn', 'blk', 'his', 'ind', 'pac', 'wht', 'tmr')
 
 
 def add_geo_columns(df):
@@ -32,12 +29,12 @@ def add_geo_columns(df):
 def add_all_stat_columns(df):
     """Add all annotations other than geographic columns
     (see add_geo_columns())"""
-    add_race_other_columns(df)
-    add_dvap_columns(df, races=RACES_WITH_OTH)
-    add_dis_prop_columns(df, races=RACES_WITH_OTH)
-    add_race_prop_columns(df, pops=POPS + ('dvap',))
-    add_racial_disp_cols(df, races=RACES_WITH_OTH)
-    add_racial_disp_score_cols(df)  # don't include oth_
+    consolidate_two_or_more_race_columns(df)
+    add_dvap_columns(df)
+    add_dis_prop_columns(df)
+    add_race_prop_columns(df)
+    add_racial_disp_cols(df)
+    add_racial_disp_score_cols(df)
 
 
 def with_columns_sorted(df):
@@ -50,24 +47,50 @@ def with_columns_sorted(df):
 # stat columns. probably best not to call these individually, as they're
 # sometimes order-dependent
 
-def add_dvap_columns(df, races=()):
+def consolidate_two_or_more_race_columns(df):
+    """Consolidate the various two-or-more race columns into "tmr"
+    (two or more races) columns."""
+    ln_races = {r.rstrip('_') for r in LN_PREFIXES.values() if r}
+    # subgroups to consolidated into "tmr" (two or more races)
+    tmr_races = sorted(ln_races - set(RACES))
+
+    for pop in POPS:
+        df[f'tmr_{pop}_est'] = sum(
+            df[f'{r}_{pop}_est'] for r in tmr_races)
+
+        df.drop(
+            [f'{r}_{pop}_est' for r in tmr_races],
+            axis=1, inplace=True,
+        )
+
+        df[f'tmr_{pop}_moe'] = sum_moes(
+            df, *(f'{r}_{pop}' for r in tmr_races)
+        )
+
+        df.drop(
+            [f'{r}_{pop}_moe' for r in tmr_races],
+            axis=1, inplace=True,
+        )
+
+
+def add_dvap_columns(df):
     """Add the *dvap_est* and *dvap_moe* columns
 
     DVAP stands for "disenfranchised voting-age population", in contrast
     to CVAP ("citizen voting-age population"), and is just number of adults
     (adu_est) minus CVAP (cvap_est).
     """
-    df[f'dvap_est'] = (df['adu_est'] - df['cvap_est']).clip(0)
-    df[f'dvap_moe'] = sum_moe_col(df, f'adu', f'cvap')
+    df['dvap_est'] = (df['adu_est'] - df['cvap_est']).clip(0)
+    df['dvap_moe'] = sum_moes(df, 'adu', 'cvap')
 
-    for r in races:
+    for r in RACES:
         df[f'{r}_dvap_est'] = (
             df[f'{r}_adu_est'] - df[f'{r}_cvap_est']
         ).clip(0)
-        df[f'{r}_dvap_moe'] = sum_moe_col(df, f'{r}_adu', f'{r}_cvap')
+        df[f'{r}_dvap_moe'] = sum_moes(df, f'{r}_adu', f'{r}_cvap')
 
 
-def add_dis_prop_columns(df, races=()):
+def add_dis_prop_columns(df):
     """Add columns for % of adults disenfranchised due to citizenship
     requirements."""
 
@@ -76,35 +99,19 @@ def add_dis_prop_columns(df, races=()):
     df['prop_adu_dvap_moe'] = prop_moes(df, 'cvap', 'adu')
 
     # same, but by race
-    for r in races:
+    for r in RACES:
         df[f'prop_{r}_adu_dvap_est'] = prop_ests(df, f'{r}_dvap', f'{r}_adu')
         df[f'prop_{r}_adu_dvap_moe'] = prop_moes(df, f'{r}_cvap', f'{r}_adu')
 
     return df
 
 
-def add_race_other_columns(df, pops=POPS):
-    """Add columns for number of people who aren't covered by the basic
-    racial data (under the original data's categories, these are
-    non-Hispanic people of two or more races).
-    """
-    for pop in pops:
-        df[f'oth_{pop}_est'] = (
-            df[f'{pop}_est'] -
-            sum(df[f'{race}_{pop}_est'] for race in RACES)
-        ).clip(0)
-
-        df[f'oth_{pop}_moe'] = sum_moe_col(
-            df, f'{pop}', *(f'{race}_{pop}' for race in RACES)
-        )
-
-
-def add_race_prop_columns(df, pops=POPS):
+def add_race_prop_columns(df):
     """Add columns like "prop_adu_his_est" 
     (estimate of % of adults that are hispanic) for each
-    race (including "other") and population type
+    racial/ethnic group
     """
-    for pop in pops:
+    for pop in POPS + ('dvap',):
         for race in RACES:
             df[f'prop_{pop}_{race}_est'] = prop_ests(
                 df, f'{race}_{pop}', f'{pop}'
@@ -114,34 +121,28 @@ def add_race_prop_columns(df, pops=POPS):
                 df, f'{race}_{pop}', f'{pop}'
             )
 
-        # other % is just one 1 minus % of each race
-        df[f'prop_{pop}_oth_est'] = (1 - sum(
-            df[f'prop_{pop}_{race}_est'] for race in RACES
-        )).clip(0, 1)
 
-        # so other MoE is just the combined MoE of % of each race
-        df[f'prop_{pop}_oth_moe'] = sum_moe_col(
-            df,
-            *(f'prop_{pop}_{race}' for race in RACES)
-        )
-
-def add_racial_disp_cols(df, races=RACES):
-    for r in races:
+def add_racial_disp_cols(df):
+    for r in RACES:
         df[f'racial_disp_{r}_est'] = (
             df[f'prop_cvap_{r}_est'] - df[f'prop_adu_{r}_est']
         )
 
-        df[f'racial_disp_{r}_moe'] = sum_moe_col(
+        df[f'racial_disp_{r}_moe'] = sum_moes(
             df, f'prop_cvap_{r}', f'prop_adu_{r}'
         )
 
 
-def add_racial_disp_score_cols(df, races=RACES):
+def add_racial_disp_score_cols(df):
     def make_score_cols(row):
         ests = []
         moes = []
 
-        for race in races:
+        for race in RACES:
+            if race == 'tmr':
+                # don't include two-or-more-races catchall in score
+                continue
+
             est = row[f'racial_disp_{race}_est']
             moe = row[f'racial_disp_{race}_moe']
 
@@ -181,9 +182,9 @@ def prop_moes(df, subpop, pop):
     ).astype('float')
 
 
-# there is no sum_est_cols(); just use +, -, and sum()
+# there is no sum_ests(); just use +, -, and sum()
 
-def sum_moe_col(df, *pops):
+def sum_moes(df, *pops):
     """Like moe_of_sum(), but operating on columns.
 
     *pops* are the column names, without the "_moe" suffix

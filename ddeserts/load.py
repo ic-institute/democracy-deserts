@@ -20,6 +20,12 @@ LN_PREFIXES = {
     'Native Hawaiian or Other Pacific Islander Alone': 'pac_',
     'White Alone': 'wht_',
     'Hispanic or Latino': 'his_',
+    # these will be consolidated into 'tmr_'
+    'American Indian or Alaska Native and White': 'tiw_',
+    'Asian and White': 'taw_',
+    'Black or African American and White': 'tbw_',
+    'American Indian or Alaska Native and Black or African American': 'tib_',
+    'Remainder of Two or More Race Responses': 'trm_',
 }
 
 

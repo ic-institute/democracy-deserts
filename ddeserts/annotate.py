@@ -34,7 +34,7 @@ def add_all_stat_columns(df):
     add_dis_prop_columns(df)
     add_race_prop_columns(df)
     add_racial_disp_cols(df)
-    add_racial_disp_score_cols(df)
+    #add_racial_disp_score_cols(df)
 
 
 def with_columns_sorted(df):

@@ -1,4 +1,3 @@
-- use census guidance on calculating moe of proportion
-  - https://www.census.gov/content/dam/Census/library/publications/2018/acs/acs_general_handbook_2018_ch08.pdf
-
-- sum 2-or-more race data to make "oth_" column, rather than using subtraction
+- put racial disparity data into Google docs (except prop. of adults of race disenfranchised)
+- make 0/0 produce NaN for est./MoE
+- put prop. of adults disenfranchised into Google docs

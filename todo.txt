@@ -1,3 +1,4 @@
 - put racial disparity data into Google docs (except prop. of adults of race disenfranchised)
 - make 0/0 produce NaN for est./MoE
+- cap MoE of ratio at 100% (if needed)
 - put prop. of adults disenfranchised into Google docs

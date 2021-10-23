@@ -3,6 +3,8 @@
 Derived from the ACS General Handbook (see
 data/census/acs_general_handbook_2018_ch08.pdf)
 """
+from numpy import NaN
+from numpy import isnan
 from math import sqrt
 
 
@@ -17,32 +19,25 @@ def moe_of_prop(subpop_est, pop_est, subpop_moe, pop_moe):
     """Approximate margin of error for the ratio of a subpopulation size
     to the population size, assuming these estimates were made from
     different sources (as happens in ACS data).
-
-    We assume:
-    - pop is at least 1
-    - subpop / pop is between 0 and 1
-    """
-    pop_est = max(pop_est, 1)
+    """    
     prop = est_of_prop(subpop_est, pop_est)
 
-    # this is the "ratio" estimate from the ACS General Handbook; the
-    # tighter "proportion" method only works when the population MoE
-    # is constructed from the subpopulation MoE, which doesn't seem
-    # to be the case in this dataset
+    if isnan(prop) or not pop_est > 0:
+        return NaN
+
+    # this is the "ratio" estimate from the ACS General Handbook; the tighter
+    # "proportion" method only works when the population MoE is constructed
+    # from the subpopulation MoE, which isn't the case in this dataset
     return 1 / pop_est * sqrt(
         subpop_moe ** 2 + (prop * pop_moe) ** 2
     )
 
 
 def est_of_prop(subpop_est, pop_est):
-    """Basically subpop_est divided by pop_est, but with some reasonable
-    assumptions that constrain the final answer:
-
-    - actual value of pop is at least 1
-    - actual value of subpop is at least 0
-    - actual value of pop/subpop (what we return) is between 0 and 1
+    """Basically subpop_est divided by pop_est, but with the final
+    value clamped between 0 and 1. If pop_est is 0, returns pd.NA.
     """
-    pop_est = max(pop_est, 1)
-    subpop_est = max(min(subpop_est, pop_est), 0)
+    if not pop_est > 0:
+        return NaN
 
-    return min(subpop_est / pop_est, 1)
+    return min(max(subpop_est / pop_est, 0), 1)

@@ -28,9 +28,14 @@ def moe_of_prop(subpop_est, pop_est, subpop_moe, pop_moe):
     # this is the "ratio" estimate from the ACS General Handbook; the tighter
     # "proportion" method only works when the population MoE is constructed
     # from the subpopulation MoE, which isn't the case in this dataset
-    return 1 / pop_est * sqrt(
+    moe = 1 / pop_est * sqrt(
         subpop_moe ** 2 + (prop * pop_moe) ** 2
     )
+
+    # actual value has to be between 0 and 1, limiting MoE
+    max_moe = max(1 - prop, prop)
+
+    return min(max_moe, moe)
 
 
 def est_of_prop(subpop_est, pop_est):

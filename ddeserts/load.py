@@ -29,7 +29,7 @@ LN_PREFIXES = {
 }
 
 
-CVAP_DATA_DIR = 'data/census/CVAP_2015-2019_ACS_csv_files'
+CVAP_DATA_DIR = 'data/census/CVAP_2016-2020_ACS_csv_files'
 CHARTER_CITIES_FILE = 'data/cacities/charter-cities.txt'
 
 

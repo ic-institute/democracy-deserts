@@ -11,13 +11,14 @@ from .annotate import LN_PREFIXES
 from .annotate import moe_of_sum
 from .parse import parse_age_sex_cit_row
 from .parse import parse_cvap_row
+from .parse import parse_felon_dis_row
 
 
-CVAP_DATA_DIR = 'data/census/CVAP_2017-2021_ACS_csv_files'
-CHARTER_CITIES_FILE = 'data/cacities/charter-cities.txt'
 AGE_SEX_CIT_DATA_PATH = (
     'data/census/ACSDT1Y2022.B05003/ACSDT1Y2022.B05003-Data.csv')
-
+CVAP_DATA_DIR = 'data/census/CVAP_2017-2021_ACS_csv_files'
+CHARTER_CITIES_FILE = 'data/cacities/charter-cities.txt'
+FELON_DIS_PATH_PATTERN = 'data/tsp/2022-felon disenfranchisement-{0}.csv'
 
 def load_age_sex_cit_data():
     """Load data from the B05033 (Age, Sex, Nativity, and Citizenship)
@@ -56,6 +57,15 @@ def load_cvap_data(name, *, pre_filter=None):
     return df
 
 
+def load_felon_dis_data(population='all'):
+    path = FELON_DIS_PATH_PATTERN.format(population)
+
+    rows = read_felon_dis_csv(path)
+
+    return rows
+
+
+
 def rows_to_records(csv_rows):
     """Turn groups of rows for the same geography into a single record."""
     for _, rows in groupby(csv_rows, lambda r: r['geoid']):
@@ -87,22 +97,12 @@ def read_age_sex_cit_csv(path):
 
     with open(path, newline='', encoding='latin-1') as f:
 
-        line_num = 0
+        f.read()  # skip the first line
 
-        def pre_filter_lines():
-            # pre-filter the lines, tracking line num
-            nonlocal line_num
-
-            for i, line in enumerate(f):
-                if i > 0:  # skip first line, use col. descriptions as headers
-                    yield line
-                line_num = i + 1  # used below
-
-        reader = DictReader(pre_filter_lines())
+        reader = DictReader(f)
 
         for row in reader:
             parsed_row = parse_age_sex_cit_row(row)
-            row['line'] = line_num
 
             yield parsed_row
 
@@ -131,6 +131,16 @@ def read_cvap_csv(path, *, pre_filter=None):
 
             row['line'] = line_num
             row['table'] = table
+
+            yield parsed_row
+
+
+def read_felon_dis_csv(path):
+     with open(path, newline='', encoding='latin-1') as f:
+        reader = DictReader(f)
+
+        for row in reader:
+            parsed_row = parse_felon_dis_row(row)
 
             yield parsed_row
 

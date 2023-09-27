@@ -21,6 +21,30 @@ def parse_cvap_row(row):
     return row
 
 
+def parse_felon_dis_row(row):
+    # update this to get data types right
+    row = {
+        k.replace('\r', ' '): v
+        for k, v in row.items()
+    }
+
+    for k, v in row.items():
+        if v == '':
+            row[k] = 0
+        elif '.' in v:
+            try:
+                row[k] = float(v)
+            except ValueError:
+                pass
+        else:
+            try:
+                row[k] = int(v.replace(',', ''))
+            except ValueError:
+                pass
+
+    return row
+
+
 def parse_geoname(geoname):
     r = dict(state='', name='', geotype='')
 

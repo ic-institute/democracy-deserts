@@ -3,11 +3,29 @@ from math import ceil
 from pandas import Series
 from pandas.api.types import is_integer_dtype
 
-from .load import LN_PREFIXES
 from .parse import parse_geoname
 from .stats import est_of_prop
 from .stats import moe_of_prop
 from .stats import moe_of_sum
+
+
+# translate single-race lntitle values to three-letter prefixes, and
+# "Total" to no prefix
+LN_PREFIXES = {
+    'Total': '',
+    'American Indian or Alaska Native Alone': 'ind_',
+    'Asian Alone': 'asn_',
+    'Black or African American Alone': 'blk_',
+    'Native Hawaiian or Other Pacific Islander Alone': 'pac_',
+    'White Alone': 'wht_',
+    'Hispanic or Latino': 'his_',
+    # these will be consolidated into 'tmr_'
+    'American Indian or Alaska Native and White': 'tiw_',
+    'Asian and White': 'taw_',
+    'Black or African American and White': 'tbw_',
+    'American Indian or Alaska Native and Black or African American': 'tib_',
+    'Remainder of Two or More Race Responses': 'trm_',
+}
 
 
 # population labels in the original data
@@ -159,6 +177,84 @@ def add_racial_disp_score_cols(df):
 
     score_df = df.apply(make_score_cols, axis=1)
     df[['racial_disp_score_est', 'racial_disp_score_moe']] = score_df
+
+
+def age_sex_cit_to_cvap(row):
+    """Convert a row from the B05033 (Age, Sex, Nativity, and Citizenship)
+    data into data matching the CVAP table. Should contain the following
+    fields:
+
+    line
+    geoname
+    geotype (always 'state')
+    tot_est
+    tot_moe
+    adu_est
+    adu_moe
+    cit_est
+    cit_moe
+    cvap_est
+    cvap_moe
+    """
+    geoname = ''
+    geotype = 'state'
+    tot_est = 0
+    tot_moe = 0
+    adu_ests = []
+    adu_moes = []
+    cit_ests = []
+    cit_moes = []
+    cvap_ests = []
+    cvap_moes = []
+
+    for k, v in row.items():
+        if k == 'Geographic Area Name':
+            geoname = v
+        elif '!!' in k:
+            parts = k.split('!!')
+            parts += [''] * (6 - len(parts))
+
+            data_type, _, sex, age, born, cit = parts
+
+            if not sex:
+                # top level totals
+                if data_type == 'Estimate':
+                    tot_est = int(v)
+                elif data_type == 'Margin of Error':
+                    tot_moe == int(v)
+
+            elif age == '18 years and over:' and not born:
+                # totals for age range, split by sex
+                if data_type == 'Estimate':
+                    adu_ests.append(v)
+                elif data_type == 'Margin of Error':
+                    adu_moes.append(v)
+
+            elif born == 'Native' or cit == 'Naturalized U.S. citizen':
+                # citizen data
+                if data_type == 'Estimate':
+                    cit_ests.append(v)
+                elif data_type == 'Margin of Error':
+                    cit_moes.append(v)
+
+                if age == '18 years and over:':
+                    if data_type == 'Estimate':
+                        cvap_ests.append(v)
+                    elif data_type == 'Margin of Error':
+                        cvap_moes.append(v)
+
+    return dict(
+        geoname=geoname,
+        geotype=geotype,
+        tot_est=tot_est,
+        tot_moe=tot_moe,
+        adu_est=sum(adu_ests),
+        adu_moe=moe_of_sum(*adu_moes),
+        cit_est=sum(cit_ests),
+        cit_moe=moe_of_sum(*cit_moes),
+        cvap_est=sum(cvap_ests),
+        cvap_moe=moe_of_sum(*cvap_moes),
+    )
 
 
 # utilities for combining columns

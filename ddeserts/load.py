@@ -7,30 +7,31 @@ from pandas import DataFrame
 from os.path import basename
 from os.path import join
 
+from .annotate import LN_PREFIXES
+from .annotate import age_sex_cit_to_cvap
+from .parse import parse_age_sex_cit_row
 from .parse import parse_cvap_row
 
 
-# translate single-race lntitle values to three-letter prefixes, and
-# "Total" to no prefix
-LN_PREFIXES = {
-    'Total': '',
-    'American Indian or Alaska Native Alone': 'ind_',
-    'Asian Alone': 'asn_',
-    'Black or African American Alone': 'blk_',
-    'Native Hawaiian or Other Pacific Islander Alone': 'pac_',
-    'White Alone': 'wht_',
-    'Hispanic or Latino': 'his_',
-    # these will be consolidated into 'tmr_'
-    'American Indian or Alaska Native and White': 'tiw_',
-    'Asian and White': 'taw_',
-    'Black or African American and White': 'tbw_',
-    'American Indian or Alaska Native and Black or African American': 'tib_',
-    'Remainder of Two or More Race Responses': 'trm_',
-}
 
 
 CVAP_DATA_DIR = 'data/census/CVAP_2017-2021_ACS_csv_files'
 CHARTER_CITIES_FILE = 'data/cacities/charter-cities.txt'
+AGE_SEX_CIT_DATA_PATH = (
+    'data/census/ACSDT1Y2022.B05003/ACSDT1Y2022.B05003-Data.csv')
+
+
+def load_age_sex_cit_data():
+    """Load data from the B05033 (Age, Sex, Nativity, and Citizenship)
+    CSV file.
+
+    Return it as a stream of rows
+    """
+    rows = read_age_sex_cit_csv(AGE_SEX_CIT_DATA_PATH)
+
+    cvap_rows = [age_sex_cit_to_cvap(row) for row in rows]
+
+    return cvap_rows
 
 
 def load_charter_cities():
@@ -81,6 +82,32 @@ def rows_to_records(csv_rows):
                     result[prefix + k] = int(v)  # values are always numbers
 
         yield result
+
+
+
+
+def read_age_sex_cit_csv(path):
+
+    with open(path, newline='', encoding='latin-1') as f:
+
+        line_num = 0
+
+        def pre_filter_lines():
+            # pre-filter the lines, tracking line num
+            nonlocal line_num
+
+            for i, line in enumerate(f):
+                if i > 0:  # skip first line, use col. descriptions as headers
+                    yield line
+                line_num = i + 1  # used below
+
+        reader = DictReader(pre_filter_lines())
+
+        for row in reader:
+            parsed_row = parse_age_sex_cit_row(row)
+            row['line'] = line_num
+
+            yield parsed_row
 
 
 def read_cvap_csv(path, *, pre_filter=None):

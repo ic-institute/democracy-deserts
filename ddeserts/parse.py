@@ -1,3 +1,15 @@
+def parse_age_sex_cit_row(row):
+    for k, v in row.items():
+        if v == 'null':
+            row[k] = None
+        elif v == '*****':
+            row[k] = 0  # exact value, no MoE
+        elif k.startswith('Estimate!!') or k.startswith('Margin of Error!!'):
+            row[k] = int(v)
+
+    return row
+
+
 def parse_cvap_row(row):
     # add geo fields
     row.update(parse_geoname(row['geoname']))

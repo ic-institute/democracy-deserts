@@ -21,7 +21,7 @@ def parse_cvap_row(row):
     return row
 
 
-def parse_felon_dis_row(row):
+def parse_felon_disf_row(row):
     # update this to get data types right
     row = {
         k.replace('\r', ' '): v

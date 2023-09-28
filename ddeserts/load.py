@@ -11,14 +11,15 @@ from .annotate import LN_PREFIXES
 from .annotate import moe_of_sum
 from .parse import parse_age_sex_cit_row
 from .parse import parse_cvap_row
-from .parse import parse_felon_dis_row
+from .parse import parse_felon_disf_row
 
 
 AGE_SEX_CIT_DATA_PATH = (
     'data/census/ACSDT1Y2022.B05003/ACSDT1Y2022.B05003-Data.csv')
 CVAP_DATA_DIR = 'data/census/CVAP_2017-2021_ACS_csv_files'
 CHARTER_CITIES_FILE = 'data/cacities/charter-cities.txt'
-FELON_DIS_PATH_PATTERN = 'data/tsp/2022-felon disenfranchisement-{0}.csv'
+FELON_DISF_PATH_PATTERN = 'data/tsp/2022-felon disenfranchisement-{0}.csv'
+
 
 def load_age_sex_cit_data():
     """Load data from the B05033 (Age, Sex, Nativity, and Citizenship)
@@ -30,6 +31,12 @@ def load_age_sex_cit_data():
     cvap_rows = [age_sex_cit_row_to_cvap(row) for row in rows]
 
     df = DataFrame.from_records(cvap_rows)
+
+    # fix data types
+    df['tot_moe'] = df['tot_moe'].astype('int')
+    df['adu_moe'] = df['adu_moe'].astype('int')
+    df['cvap_moe'] = df['cvap_moe'].astype('int')
+    df['cit_moe'] = df['cit_moe'].astype('int')
 
     return df
 
@@ -57,13 +64,15 @@ def load_cvap_data(name, *, pre_filter=None):
     return df
 
 
-def load_felon_dis_data(population='all'):
-    path = FELON_DIS_PATH_PATTERN.format(population)
+def load_felon_disf_data(population='all'):
+    path = FELON_DISF_PATH_PATTERN.format(population)
 
-    rows = read_felon_dis_csv(path)
+    rows = read_felon_disf_csv(path)
+    cvap_rows = [felon_disf_row_to_cvap(row) for row in rows]
 
-    return rows
+    df = DataFrame.from_records(cvap_rows)
 
+    return df
 
 
 def rows_to_records(csv_rows):
@@ -97,7 +106,7 @@ def read_age_sex_cit_csv(path):
 
     with open(path, newline='', encoding='latin-1') as f:
 
-        f.read()  # skip the first line
+        f.readline()  # skip the first line
 
         reader = DictReader(f)
 
@@ -135,12 +144,12 @@ def read_cvap_csv(path, *, pre_filter=None):
             yield parsed_row
 
 
-def read_felon_dis_csv(path):
+def read_felon_disf_csv(path):
      with open(path, newline='', encoding='latin-1') as f:
         reader = DictReader(f)
 
         for row in reader:
-            parsed_row = parse_felon_dis_row(row)
+            parsed_row = parse_felon_disf_row(row)
 
             yield parsed_row
 
@@ -220,4 +229,14 @@ def age_sex_cit_row_to_cvap(row):
         cit_moe=moe_of_sum(*cit_moes),
         cvap_est=sum(cvap_ests),
         cvap_moe=moe_of_sum(*cvap_moes),
+    )
+
+
+def felon_disf_row_to_cvap(row):
+    return dict(
+        geoname=row['STATE'],
+        geotype='state',
+        cvap_est=row['VOTING ELIGIBLE POPULATION'],
+        felon_dvap_est=row['TOTAL'],
+        prop_cvap_felon_dvap_est=row['% DISF.'] / 100,
     )

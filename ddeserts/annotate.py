@@ -1,5 +1,6 @@
 from math import ceil
 
+import pandas as pd
 from pandas import Series
 from pandas.api.types import is_integer_dtype
 

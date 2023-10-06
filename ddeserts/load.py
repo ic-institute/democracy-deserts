@@ -188,6 +188,8 @@ def age_sex_cit_row_to_cvap(row):
         elif '!!' in k:
             parts = k.split('!!')
             parts += [''] * (6 - len(parts))
+            parts = [p.rstrip(':') for p in parts]  # colon started in 2019
+
 
             data_type, _, sex, age, born, cit = parts
 
@@ -198,7 +200,7 @@ def age_sex_cit_row_to_cvap(row):
                 elif data_type == 'Margin of Error':
                     tot_moe == int(v)
 
-            elif age == '18 years and over:' and not born:
+            elif age == '18 years and over' and not born:
                 # totals for age range, split by sex
                 if data_type == 'Estimate':
                     adu_ests.append(v)
@@ -212,7 +214,7 @@ def age_sex_cit_row_to_cvap(row):
                 elif data_type == 'Margin of Error':
                     cit_moes.append(v)
 
-                if age == '18 years and over:':
+                if age == '18 years and over':
                     if data_type == 'Estimate':
                         cvap_ests.append(v)
                     elif data_type == 'Margin of Error':

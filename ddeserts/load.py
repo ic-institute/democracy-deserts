@@ -238,7 +238,11 @@ def felon_disf_row_to_cvap(row):
     return dict(
         geoname=row['STATE'],
         geotype='state',
-        cvap_est=row['VOTING ELIGIBLE POPULATION'],
-        felon_dvap_est=row['TOTAL'],
-        prop_cvap_felon_dvap_est=row['% DISF.'] / 100,
+        # outdated, from 2016-2020 ACS data
+        cvap_est_2016_2020=row['VOTING ELIGIBLE POPULATION'],
+        felon_prison_est=row['PRISON'],
+        felon_disf_est=row['TOTAL'],
+        # not accurate; doesn't account for non-citizen felons,
+        # just dervied from TOTAL/VOTING ELIGIBLE POPULATION
+        #prop_cvap_felon_disf_est=row['% DISF.'] / 100,
     )

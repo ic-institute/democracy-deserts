@@ -1,14 +1,3 @@
-def parse_age_sex_cit_row(row):
-    for k, v in row.items():
-        if v == 'null':
-            row[k] = None
-        elif v == '*****':
-            row[k] = 0  # exact value, no MoE
-        elif k.startswith('Estimate!!') or k.startswith('Margin of Error!!'):
-            row[k] = int(v)
-
-    return row
-
 
 def parse_cvap_row(row):
     # add geo fields
@@ -17,30 +6,6 @@ def parse_cvap_row(row):
     for k, v in row.items():
         if k.endswith('_est') or k.endswith('_tot') or k.endswith('number'):
             row[k] = int(v)
-
-    return row
-
-
-def parse_felon_disf_row(row):
-    # update this to get data types right
-    row = {
-        k.replace('\r', ' '): v
-        for k, v in row.items()
-    }
-
-    for k, v in row.items():
-        if v == '':
-            row[k] = 0
-        elif '.' in v:
-            try:
-                row[k] = float(v)
-            except ValueError:
-                pass
-        else:
-            try:
-                row[k] = int(v.replace(',', ''))
-            except ValueError:
-                pass
 
     return row
 

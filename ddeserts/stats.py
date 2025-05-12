@@ -15,6 +15,11 @@ def moe_of_sum(*moes):
     return sqrt(sum(moe ** 2 for moe in moes))
 
 
+def moe_of_product(x_est, y_est, x_moe, y_moe):
+    """Approximate error of a product"""
+    return sqrt((x_est * y_moe) ** 2 + (y_est * x_moe) ** 2)
+
+
 def moe_of_prop(subpop_est, pop_est, subpop_moe, pop_moe):
     """Approximate margin of error for the ratio of a subpopulation size
     to the population size, assuming these estimates were made from
@@ -22,7 +27,7 @@ def moe_of_prop(subpop_est, pop_est, subpop_moe, pop_moe):
     """    
     prop = est_of_prop(subpop_est, pop_est)
 
-    if isnan(prop) or not pop_est > 0:
+    if isnan(prop) or not pop_est >= 0:
         return NaN
 
     # this is the "ratio" estimate from the ACS General Handbook; the tighter

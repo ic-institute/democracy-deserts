@@ -6,6 +6,7 @@ from pandas.api.types import is_integer_dtype
 
 from .parse import parse_geoname
 from .stats import est_of_prop
+from .stats import moe_of_product
 from .stats import moe_of_prop
 from .stats import moe_of_sum
 
@@ -221,3 +222,17 @@ def sum_moes(df, *pops):
 
     return result
 
+# there is no multiply_ests(), just use *
+
+def multiply_moes(df, x, y):
+    """Like moe_of_product, but operating on columns.
+
+    *x* and *y* are column names (minus the _est or _moe suffix)
+    """
+    return df.apply(
+        lambda r: moe_of_product(
+            r[f'{x}_est'], r[f'{y}_est'],
+            r[f'{x}_moe'], r[f'{y}_moe'],
+        ),
+        axis=1,
+    ).astype('float')
